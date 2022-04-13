@@ -1,6 +1,13 @@
 import face_recognition
 import os
 import cv2
+
+from datetime import datetime
+from datetime import timezone
+import base64
+import json
+import requests
+
 # from datetime import datetime, timezone
 from flask import Flask, Response, render_template
 
@@ -15,6 +22,30 @@ def name_to_color(name):
     return color
 
 
+def sendDetectResult(frame, detectName):
+    url = "" # send url
+    currentTime = datetime.now()
+    currentTime = currentTime.strftime('%Y %m %d %H:%M')
+    is_success, im_buf_arr = cv2.imencode(".jpg", frame)
+    byte_im = im_buf_arr.tobytes()
+    im_b64 = base64.b64encode(byte_im).decode("utf8")
+    body= {
+            "Image": im_b64,
+            "DetectionDetail": {
+                "name": detectName,
+                "cameraId": "4d2f5c64-29c3-497e-90a6-575704777ce8",
+                "DetectionTime": currentTime
+            },
+        }
+
+    payload = json.dumps(body)
+    headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
+    res = requests.post(url, data=payload, headers=headers)
+    try:
+        data = res.json()
+        print(data)
+    except:
+        assert True
 
 def process():
 
